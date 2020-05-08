@@ -1,6 +1,10 @@
 # Github Deployer
 Deploy multiple markdown-based repository to single Github Jekyll page. This project intented for personal use only.
 
+<p align="center">
+<img src="img/gh-deployer.png" />
+</p>
+
 ## Features
 
 - [x] Deploy markdown-based repo to gh page repository for every merged PR
