@@ -9,7 +9,7 @@ SECRET_TOKEN = ENV['SECRET_TOKEN']
 EMAIL = ENV['EMAIL']
 
 puts `git config --global user.email "#{EMAIL}"`
-puts `git config --global user.name "bot"`
+puts `git config --global user.name "Bot"`
 
 get '/' do
   'ok'
@@ -36,21 +36,28 @@ helpers do
 
   def run_deployment(source_repo)
     user = JSON.parse(`curl -sH "Authorization: token #{ACCESS_TOKEN}" https://api.github.com/user`)
+    username = user['login']
     tmp = '/tmp/gh-deployer'
-    repo_path = File.join(tmp, "#{user['login']}.github.io")
-    target_repo = "#{user['login']}/#{user['login']}.github.io"
 
-    puts `mkdir -p #{tmp}`
-    puts `cd #{tmp} && git clone https://#{user['login']}:#{ACCESS_TOKEN}@github.com/#{target_repo}.git`
-    puts `cd #{tmp} && git clone https://#{user['login']}:#{ACCESS_TOKEN}@github.com/#{source_repo}.git`
-    puts `cd #{repo_path} && git remote set-url origin https://#{user['login']}:#{ACCESS_TOKEN}@github.com/#{target_repo}.git`
-    puts `cd #{repo_path} && git remote get-url origin`
+    target_repo = "#{username}/#{username}.github.io"
+    target_repo_name = target_repo.split('/')[-1]
+    target_repo_path = File.join(tmp, target_repo_name)
 
     source_repo_name = source_repo.split('/')[-1]
     source_repo_path = File.join(tmp, source_repo_name)
 
+    puts `mkdir -p #{tmp}`
+    Dir.chdir(tmp) do
+      puts `
+        git clone https://#{username}:#{ACCESS_TOKEN}@github.com/#{target_repo}.git
+        git clone https://#{username}:#{ACCESS_TOKEN}@github.com/#{source_repo}.git
+        git remote set-url origin https://#{username}:#{ACCESS_TOKEN}@github.com/#{target_repo}.git
+        git remote get-url origin
+      `
+    end
+
     format_source_files(source_repo_path)
-    targeted_files = get_targeted_files(repo_path)
+    targeted_files = get_targeted_files(target_repo_path)
     source_files = get_source_files(source_repo_path)
     updated_files = targeted_files.select { |k, v| source_files[k] && v[1] != source_files[k][1] }
     new_files = source_files.reject { |k| targeted_files[k] }
@@ -58,22 +65,28 @@ helpers do
 
     files = updated_files.merge(new_files)
 
-    post_path = File.join(repo_path, '_posts')
-    files.each { |k, v| `cd #{source_repo_path} && cp #{k} #{post_path}/#{v[0]}` }
+    post_path = File.join(target_repo_path, '_posts')
+    Dir.chdir(source_repo_path) do
+      files.each { |k, v| `cp #{k} #{post_path}/#{v[0]}` }
+    end
 
     puts "Update: #{updated_files.keys}"
     puts "Add: #{new_files.keys}"
-    puts `cd #{repo_path} && git status`
-    puts `cd #{repo_path} && git add -u && git commit -m "Update #{updated_files.keys}"`
-    puts `cd #{repo_path} && git add -A && git commit -m "Add #{new_files.keys}"`
-    puts `cd #{repo_path} && git push origin master`
+    Dir.chdir(target_repo_path) do
+      puts `
+        git status
+        git add -u && git commit -m "Update #{updated_files.keys}"
+        git add -A && git commit -m "Add #{new_files.keys}"
+        git push origin master
+      `
+    end
 
     puts `rm -rf #{tmp}`
   end
 
-  def get_targeted_files(repo_path)
+  def get_targeted_files(target_repo_path)
     files = []
-    post_path = File.join(repo_path, '_posts')
+    post_path = File.join(target_repo_path, '_posts')
     Dir.chdir(post_path) do
       files = Dir.glob '*.md'
       files.map! { |f| [sanitize_filename(f), [f, Digest::SHA256.hexdigest(File.read(f))]] }
