@@ -41,9 +41,8 @@ helpers do
     target_repo = "#{user['login']}/#{user['login']}.github.io"
 
     puts `mkdir -p #{tmp}`
-    puts `cd #{tmp} && \
-    git clone https://#{user['login']}:#{ACCESS_TOKEN}@github.com/#{target_repo}.git && \
-    git clone https://#{user['login']}:#{ACCESS_TOKEN}@github.com/#{source_repo}.git`
+    puts `cd #{tmp} && git clone https://#{user['login']}:#{ACCESS_TOKEN}@github.com/#{target_repo}.git`
+    puts `cd #{tmp} && git clone https://#{user['login']}:#{ACCESS_TOKEN}@github.com/#{source_repo}.git`
     puts `cd #{repo_path} && git remote set-url origin https://#{user['login']}:#{ACCESS_TOKEN}@github.com/#{@repo}.git`
 
     source_repo_name = source_repo.split('/')[-1]
@@ -63,10 +62,10 @@ helpers do
 
     puts "Update: #{updated_files.keys}"
     puts "Add: #{new_files.keys}"
-    puts `cd #{repo_path} && \
-    git add -u && git commit -m "Update #{updated_files.keys}" && \
-    git add -A && git commit -m "Add #{new_files.keys}" && \
-    git push origin master`
+    puts `cd #{repo_path} && git status`
+    puts `cd #{repo_path} && git add -u && git commit -m "Update #{updated_files.keys}"`
+    puts `cd #{repo_path} && git add -A && git commit -m "Add #{new_files.keys}"`
+    puts `cd #{repo_path} && git push origin master`
 
     puts `rm -rf #{tmp}`
   end
