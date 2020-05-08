@@ -1,15 +1,10 @@
 runtime: ruby
-env: flex
+service: gh-deployer
+instance_class: F1
 entrypoint: bundle exec ruby app.rb
 
-manual_scaling:
-  instances: 1
-resources:
-  cpu: 1
-  memory_gb: 0.5
-  disk_size_gb: 10
 env_variables:
   RACK_ENV: "production"
   ACCESS_TOKEN: "accessT0k3n"
   SECRET_TOKEN: "S3cr3tT0k3n"
-  EMAIL: "baba@baba.com"
+  EMAIL: "john@doe.com"
