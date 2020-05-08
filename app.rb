@@ -43,7 +43,8 @@ helpers do
     puts `mkdir -p #{tmp}`
     puts `cd #{tmp} && git clone https://#{user['login']}:#{ACCESS_TOKEN}@github.com/#{target_repo}.git`
     puts `cd #{tmp} && git clone https://#{user['login']}:#{ACCESS_TOKEN}@github.com/#{source_repo}.git`
-    puts `cd #{repo_path} && git remote set-url origin https://#{user['login']}:#{ACCESS_TOKEN}@github.com/#{@repo}.git`
+    puts `cd #{repo_path} && git remote set-url origin https://#{user['login']}:#{ACCESS_TOKEN}@github.com/#{target_repo}.git`
+    puts `cd #{repo_path} && git remote get-url origin`
 
     source_repo_name = source_repo.split('/')[-1]
     source_repo_path = File.join(tmp, source_repo_name)
